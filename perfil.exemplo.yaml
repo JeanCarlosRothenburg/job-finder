@@ -1,0 +1,115 @@
+# Perfil de EXEMPLO. Copie para perfil.yaml e preencha a partir do seu currículo.
+# As skills abaixo são só ilustrativas: nunca liste algo que não está no currículo.
+# "profissional" = usada no trabalho; "conhecimento" = estudada, sem uso profissional.
+exemplo: true
+nome: Jean
+
+skills:
+  profissional:
+    - nome: Java
+      anos: 3
+    - nome: SQL
+      sinonimos: [postgresql, banco de dados relacional]
+    - nome: JavaScript
+    - nome: Git
+    - nome: APIs REST
+  conhecimento:
+    - nome: Python
+    - nome: React
+    - nome: Docker
+    - nome: Testes automatizados
+    - nome: CI/CD
+    - nome: Scrum
+
+# Sinônimos próprios (além dos padrões em src/job_finder/perfil.py)
+sinonimos:
+  sql: [mysql, oracle, sql server]
+
+formacao:
+  - Engenharia de Software (UDESC), em curso
+  - Técnico em Informática (IFC)
+
+idiomas:
+  ingles: tecnico   # tecnico | intermediario | avancado | fluente
+
+localidade:
+  cidade_base: Presidente Getúlio
+  uf_base: SC
+  raio_km: 70                 # presencial e híbrido só dentro deste raio
+  cidades_aceitas_extra: []   # ex.: [Jaraguá do Sul/SC] para aceitar fora do raio
+
+filtros:
+  senioridades_aceitas: [junior, pleno]
+  max_anos_exigidos: 4        # vagas que pedem 5+ anos são descartadas
+  contratos_aceitos: [clt, pj]
+  titulos_incluir:
+    - desenvolvedor
+    - desenvolvedora
+    - developer
+    - dev
+    - programador
+    - programadora
+    - engenheiro de software
+    - engenheira de software
+    - software engineer
+    - back-end
+    - backend
+    - front-end
+    - frontend
+    - full-stack
+    - fullstack
+    - full stack
+  titulos_excluir:
+    - estagio
+    - estagiario
+    - estagiaria
+    - trainee
+    - jovem aprendiz
+    - senior
+    - sr
+    - especialista
+    - lider
+    - tech lead
+    - head
+    - gerente
+    - coordenador
+    - arquiteto
+    - staff
+    - principal
+    - qa
+    - quality assurance
+    - engenheiro de dados
+    - engenheira de dados
+    - cientista de dados
+    - analista de dados
+    - data engineer
+    - data scientist
+    - mobile
+    - android
+    - ios
+    - flutter
+    - suporte
+    - infraestrutura
+    - devops
+    - sre
+    - salesforce
+    - sap
+    - abap
+
+nota:
+  corte: 8                    # entra em Compatíveis com nota >= corte
+  peso_obrigatorio: 0.8
+  peso_diferencial: 0.2
+  trava_obrigatorio_central: 7  # nota máxima se faltar um obrigatório de peso 3
+
+coleta:
+  termos_busca:
+    - desenvolvedor
+    - backend
+    - frontend
+    - full stack
+    - engenheiro de software
+  repositorios_github:
+    - backend-br/vagas
+    - frontendbr/vagas
+    - react-brasil/vagas

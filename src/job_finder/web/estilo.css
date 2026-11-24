@@ -1,0 +1,73 @@
+:root {
+  --fundo: #f5f5f2; --cartao: #ffffff; --texto: #1d1d1b; --suave: #6b6b66; --borda: #e2e1dc;
+  --sim: #1f8a4c; --nao: #c2412d; --destaque: #2f5fd0; --amarelo: #a86b00; --sombra: 0 6px 24px rgba(0,0,0,.08);
+}
+@media (prefers-color-scheme: dark) {
+  :root { --fundo: #161615; --cartao: #22221f; --texto: #ecebe6; --suave: #a3a29b; --borda: #34332f;
+    --sim: #3fb36f; --nao: #e0644f; --destaque: #6f95ff; --amarelo: #e0a63a; --sombra: 0 6px 24px rgba(0,0,0,.4); }
+}
+* { box-sizing: border-box; }
+body { margin: 0; font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--fundo); color: var(--texto); }
+header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; padding: 12px 20px; border-bottom: 1px solid var(--borda); background: var(--cartao); position: sticky; top: 0; z-index: 5; }
+h1 { font-size: 18px; margin: 0; }
+h2 { font-size: 16px; margin: 24px 0 8px; }
+nav { display: flex; gap: 4px; flex-wrap: wrap; }
+nav button { background: none; border: 0; padding: 8px 12px; border-radius: 8px; color: var(--suave); cursor: pointer; font: inherit; }
+nav button.ativa { background: var(--fundo); color: var(--texto); font-weight: 600; }
+.contador:not(:empty) { background: var(--destaque); color: #fff; border-radius: 10px; padding: 0 7px; font-size: 12px; margin-left: 4px; }
+.status { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.pill { font-size: 12px; padding: 4px 10px; border-radius: 12px; border: 1px solid var(--borda); }
+.pill.ok { color: var(--sim); } .pill.erro { color: var(--nao); }
+button { font: inherit; cursor: pointer; border-radius: 8px; border: 1px solid var(--destaque); background: var(--destaque); color: #fff; padding: 8px 14px; }
+button.sec { background: none; color: var(--destaque); }
+button:disabled { opacity: .5; cursor: default; }
+.aviso { background: #fff4d6; color: #5c4300; padding: 10px 20px; border-bottom: 1px solid #f0dc9c; }
+@media (prefers-color-scheme: dark) { .aviso { background: #3a2f12; color: #f2dc9c; border-color: #5c4a1a; } }
+main { max-width: 980px; margin: 0 auto; padding: 20px 16px 60px; }
+.dica { color: var(--suave); font-size: 13px; text-align: center; }
+
+/* Pilha de cartões */
+.pilha { position: relative; height: 520px; max-width: 560px; margin: 0 auto; }
+.cartao { position: absolute; inset: 0; background: var(--cartao); border: 1px solid var(--borda); border-radius: 18px; box-shadow: var(--sombra);
+  padding: 22px; overflow: auto; touch-action: pan-y; user-select: none; transition: transform .25s ease, opacity .25s ease; }
+.cartao.arrastando { transition: none; }
+.cartao.atras { transform: scale(.96) translateY(10px); opacity: .7; pointer-events: none; }
+.cartao .topo { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
+.cartao h3 { margin: 0 0 4px; font-size: 20px; }
+.cartao .empresa { color: var(--suave); }
+.nota { font-size: 30px; font-weight: 700; color: var(--sim); min-width: 64px; text-align: right; }
+.nota.media { color: var(--amarelo); }
+.meta { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0; }
+.meta span { font-size: 12px; background: var(--fundo); border: 1px solid var(--borda); padding: 3px 9px; border-radius: 10px; }
+.meta span.alerta { color: var(--amarelo); }
+.grupo h4 { margin: 12px 0 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--suave); }
+.grupo ul { margin: 0; padding-left: 18px; }
+.grupo.prof li::marker { color: var(--sim); } .grupo.conh li::marker { color: var(--amarelo); } .grupo.falta li::marker { color: var(--nao); }
+.carimbo { position: absolute; top: 24px; font-size: 26px; font-weight: 800; padding: 4px 12px; border: 3px solid; border-radius: 8px; opacity: 0; }
+.carimbo.sim { left: 24px; color: var(--sim); transform: rotate(-12deg); }
+.carimbo.nao { right: 24px; color: var(--nao); transform: rotate(12deg); }
+.vazio { text-align: center; color: var(--suave); padding-top: 160px; }
+.acoes-pilha { display: flex; justify-content: center; gap: 22px; margin: 18px 0 6px; }
+.redondo { width: 60px; height: 60px; border-radius: 50%; font-size: 24px; padding: 0; background: var(--cartao); box-shadow: var(--sombra); }
+.redondo.sim { color: var(--sim); border-color: var(--sim); } .redondo.nao { color: var(--nao); border-color: var(--nao); }
+.redondo.neutro { width: 46px; height: 46px; font-size: 18px; color: var(--suave); border-color: var(--borda); align-self: center; }
+.link { color: var(--destaque); background: none; border: 0; padding: 0; text-decoration: underline; }
+
+/* Listas */
+.item { background: var(--cartao); border: 1px solid var(--borda); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+.item .cab { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.item .botoes { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.bloco-texto { margin-top: 10px; }
+.bloco-texto label { font-size: 12px; color: var(--suave); display: block; margin-bottom: 4px; }
+textarea, input, select { width: 100%; font: inherit; padding: 8px 10px; border: 1px solid var(--borda); border-radius: 8px; background: var(--fundo); color: var(--texto); }
+.form { display: grid; gap: 8px; max-width: 640px; }
+.linha { display: grid; grid-template-columns: 2fr 70px 1fr; gap: 8px; }
+.tabela-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; background: var(--cartao); border-radius: 12px; overflow: hidden; margin-top: 10px; }
+th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--borda); font-size: 14px; }
+th { font-size: 12px; text-transform: uppercase; color: var(--suave); }
+td input { min-width: 160px; }
+dialog { max-width: 760px; width: calc(100% - 32px); border: 1px solid var(--borda); border-radius: 14px; background: var(--cartao); color: var(--texto); }
+dialog pre { white-space: pre-wrap; font: inherit; }
+#toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--texto); color: var(--fundo); padding: 10px 16px; border-radius: 10px; z-index: 10; }
+@media (max-width: 600px) { .pilha { height: 470px; } .status { margin-left: 0; } header { padding: 10px 16px; } }

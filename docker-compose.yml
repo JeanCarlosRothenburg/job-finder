@@ -1,0 +1,29 @@
+# docker compose up -d   → http://localhost:8000
+# O Ollama fica fora do container (nativo no host) e é acessado por host.docker.internal.
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    ports: ["127.0.0.1:8000:8000"]
+    env_file: [.env]
+    environment:
+      JOBFINDER_DB: /dados/job_finder.db
+      JOBFINDER_PERFIL: /config/perfil.yaml
+      OLLAMA_URL: http://host.docker.internal:11434
+    volumes:
+      - dados:/dados
+      - ./perfil.yaml:/config/perfil.yaml:ro
+    extra_hosts: ["host.docker.internal:host-gateway"]
+
+  # Opcional: só vale a pena em Linux/Windows com GPU NVIDIA (descomente e ajuste OLLAMA_URL para http://ollama:11434).
+  # ollama:
+  #   image: ollama/ollama
+  #   volumes: [ollama_models:/root/.ollama]
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices: [{ driver: nvidia, count: all, capabilities: [gpu] }]
+
+volumes:
+  dados:
+  # ollama_models:

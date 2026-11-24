@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Job Finder</title>
+  <link rel="stylesheet" href="/static/estilo.css">
+</head>
+<body>
+  <header>
+    <h1>Job Finder</h1>
+    <nav id="abas">
+      <button data-aba="pilha" class="ativa">Pilha <span class="contador" id="c-pilha"></span></button>
+      <button data-aba="candidatar">Candidatar <span class="contador" id="c-candidatar"></span></button>
+      <button data-aba="realizadas">Candidaturas realizadas <span class="contador" id="c-realizadas"></span></button>
+      <button data-aba="alertas">Alertas e manual <span class="contador" id="c-alertas"></span></button>
+      <button data-aba="recusadas">Recusadas</button>
+    </nav>
+    <div class="status">
+      <span id="st-ollama" class="pill">Ollama…</span>
+      <button id="btn-coletar" class="sec">Buscar vagas agora</button>
+    </div>
+  </header>
+  <div id="aviso-perfil" class="aviso" hidden>
+    Usando o <b>perfil de exemplo</b>. Crie o <code>perfil.yaml</code> a partir do seu currículo para notas reais.
+  </div>
+
+  <main>
+    <section id="aba-pilha" class="aba">
+      <div id="pilha" class="pilha"></div>
+      <div class="acoes-pilha">
+        <button id="btn-recusar" class="redondo nao" title="Recusar (←)">✕</button>
+        <button id="btn-desfazer" class="redondo neutro" title="Desfazer (Ctrl+Z)">↺</button>
+        <button id="btn-confirmar" class="redondo sim" title="Confirmar (→)">✓</button>
+      </div>
+      <p class="dica">Arraste para a direita ou tecle → para confirmar; para a esquerda ou ← para recusar.</p>
+    </section>
+
+    <section id="aba-candidatar" class="aba" hidden>
+      <p class="dica">Peça ao Claude: <i>"use o job-finder e gere os textos das vagas confirmadas"</i>. Os textos aparecem aqui.</p>
+      <div id="lista-candidatar"></div>
+    </section>
+
+    <section id="aba-realizadas" class="aba" hidden>
+      <input id="filtro-realizadas" type="search" placeholder="Filtrar por cargo ou empresa">
+      <div class="tabela-wrap"><table id="tabela-realizadas">
+        <thead><tr><th>Data</th><th>Cargo</th><th>Empresa</th><th>Nota</th><th>Canal</th><th>Observações</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+    </section>
+
+    <section id="aba-alertas" class="aba" hidden>
+      <h2>Vagas dos alertas de e-mail sem descrição</h2>
+      <p class="dica">Abra a vaga, copie a descrição e cole aqui. O sistema filtra e calcula a nota.</p>
+      <div id="lista-alertas"></div>
+      <h2>Adicionar vaga manualmente</h2>
+      <form id="form-manual" class="form">
+        <input name="url" placeholder="Link da vaga" required>
+        <input name="titulo" placeholder="Cargo" required>
+        <input name="empresa" placeholder="Empresa">
+        <div class="linha">
+          <input name="cidade" placeholder="Cidade">
+          <input name="uf" placeholder="UF" maxlength="2">
+          <select name="modelo"><option value="">Modelo?</option><option value="remoto">Remoto</option><option value="hibrido">Híbrido</option><option value="presencial">Presencial</option></select>
+        </div>
+        <textarea name="descricao" rows="8" placeholder="Descrição completa da vaga" required></textarea>
+        <button type="submit">Adicionar e analisar</button>
+      </form>
+    </section>
+
+    <section id="aba-recusadas" class="aba" hidden>
+      <div id="lista-recusadas"></div>
+    </section>
+  </main>
+
+  <dialog id="modal"><div id="modal-corpo"></div><form method="dialog"><button>Fechar</button></form></dialog>
+  <div id="toast" hidden></div>
+  <script src="/static/app.js"></script>
+</body>
+</html>

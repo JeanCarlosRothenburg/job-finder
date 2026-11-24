@@ -1,0 +1,2 @@
+municipios.csv derivado de https://github.com/kelvins/municipios-brasileiros
+(coordenadas dos municípios do IBGE), licença MIT, Copyright (c) 2016 Kelvin S. do Prado.
