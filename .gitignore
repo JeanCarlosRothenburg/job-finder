@@ -6,6 +6,5 @@ __pycache__/
 *.db
 *.db-journal
 .env
-perfil.yaml
 curriculo.pdf
 .DS_Store

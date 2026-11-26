@@ -92,3 +92,31 @@ def test_pos_filtro(perfil):
     assert not pos_filtro(vaga(), {**ext, "fuso_exterior": True}, perfil).aprovada
     assert not pos_filtro(vaga(), {**ext, "cargo_area": "outro"}, perfil).aprovada
     assert not pos_filtro(vaga(modelo=""), {**ext, "modelo_trabalho": "presencial", "cidade": "Curitiba", "uf": "PR"}, perfil).aprovada
+
+
+def test_perfil_real_do_jean():
+    from pathlib import Path
+
+    from job_finder.perfil import carregar_perfil
+
+    p = carregar_perfil(Path(__file__).resolve().parents[1] / "perfil.yaml")
+    assert not p.exemplo
+    assert p.nivel_de("PHP")[0] == "profissional"
+    assert p.nivel_de("Vue.js")[0] == "profissional"
+    assert p.nivel_de("Bancos de dados relacionais")[0] == "profissional"
+    # conhecimento nunca vira experiência profissional
+    assert p.nivel_de("Node.js") == ("conhecimento", "Node.js")
+    assert p.nivel_de("Laravel")[0] == "conhecimento"
+    assert p.nivel_de("Java")[0] == "conhecimento"
+    assert p.nivel_de("React")[0] == "conhecimento"
+    assert p.nivel_de("Docker")[0] == "conhecimento"
+    assert p.nivel_de("Golang")[0] is None
+    nota, det = calcular_nota([{"nome": "Graduação completa em TI", "tipo": "obrigatorio", "peso": 1}], p)
+    assert nota == 5.0
+    nota, det = calcular_nota([
+        {"nome": "PHP", "tipo": "obrigatorio", "peso": 3},
+        {"nome": "Vue.js", "tipo": "obrigatorio", "peso": 3},
+        {"nome": "PostgreSQL", "tipo": "obrigatorio", "peso": 2},
+        {"nome": "Laravel", "tipo": "diferencial", "peso": 1},
+    ], p)
+    assert nota == 9.0 and det["atende_conhecimento"] == ["Laravel (diferencial)"]

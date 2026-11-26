@@ -23,7 +23,8 @@ def contem_termo(texto_norm: str, termo: str) -> bool:
     t = normalizar(termo)
     if not t:
         return False
-    return re.search(rf"(?<![a-z0-9+#]){re.escape(t)}(?![a-z0-9+#])", texto_norm) is not None
+    # "." só separa palavras no fim de frase: "js" não casa dentro de "node.js"
+    return re.search(rf"(?<![a-z0-9+#.]){re.escape(t)}(?![a-z0-9+#]|\.[a-z0-9])", texto_norm) is not None
 
 
 def hash_texto(s: str) -> str:

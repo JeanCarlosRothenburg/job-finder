@@ -39,8 +39,9 @@ cd job-finder
 
 Depois:
 
-1. Preencha o `perfil.yaml` a partir do currículo: skills em `profissional` ou `conhecimento`
-   (nunca as misture), formação, inglês, raio. Ele fica fora do Git.
+1. O `perfil.yaml` já vem com o perfil do Jean (montado a partir do currículo): skills em
+   `profissional` ou `conhecimento` (só a primeira conta como experiência), formação, inglês e raio.
+   Depois de editá-lo, rode `uv run job-finder recalcular`.
 2. Ajuste o `.env` se quiser outro modelo (ex.: `OLLAMA_MODELO=gemma3:4b`) ou outro intervalo de coleta.
 3. Confira as fontes: `uv run job-finder testar-fontes`.
 4. Suba o app: `uv run job-finder serve` e abra http://127.0.0.1:8000. A coleta roda sozinha a

@@ -34,7 +34,6 @@ SINONIMOS_PADRAO: dict[str, list[str]] = {
     "css": ["css3", "sass", "scss"],
     "aws": ["amazon web services"],
     "python": ["python3"],
-    "php": ["laravel"],
 }
 
 
@@ -75,6 +74,7 @@ class Perfil:
     skills: list[Skill] = field(default_factory=list)
     formacao: list[str] = field(default_factory=list)
     ingles: str = "tecnico"
+    graduacao_em_andamento: bool = False
     sinonimos: dict[str, list[str]] = field(default_factory=dict)
     repositorios_github: list[str] = field(default_factory=list)
     exemplo: bool = False
@@ -92,6 +92,10 @@ class Perfil:
         if not req:
             return None, None
         extras = self._sinonimos()
+        # 1º: casamento exato (nome ou sinônimo), que vale mais do que qualquer casamento parcial
+        for skill in self.skills:
+            if any(normalizar(t) == req for t in skill.termos(extras)):
+                return skill.nivel, skill.nome
         melhor: tuple[str | None, str | None] = (None, None)
         for skill in self.skills:
             for termo in skill.termos(extras):
@@ -154,6 +158,7 @@ def carregar_perfil(caminho: str | Path) -> Perfil:
         skills=_ler_skills(dados),
         formacao=dados.get("formacao", []) or [],
         ingles=(dados.get("idiomas", {}) or {}).get("ingles", "tecnico"),
+        graduacao_em_andamento=bool(dados.get("graduacao_em_andamento", False)),
         sinonimos=dados.get("sinonimos", {}) or {},
         exemplo=exemplo or bool(dados.get("exemplo", False)),
     )

@@ -26,6 +26,9 @@ def _casar(req: str, perfil: Perfil) -> tuple[str | None, str | None]:
         pedido = next((o for o in ordem[1:] if o[:5] in n), "tecnico")
         return ("profissional" if ordem.index(perfil.ingles) >= ordem.index(pedido) else None), "Inglês"
     if any(t in n for t in _FORMACAO) and perfil.formacao:
+        # graduação concluída pedida e a do candidato está em andamento: atende parcialmente
+        if perfil.graduacao_em_andamento and any(t in n for t in ("completo", "completa", "concluido", "concluida", "formado")):
+            return "conhecimento", perfil.formacao[0]
         return "profissional", perfil.formacao[0]
     return perfil.nivel_de(req)
 

@@ -1,0 +1,170 @@
+# Perfil de Jean Carlos Rothenburg, montado a partir do currículo (2026-11-26).
+# Regra: só conta como experiência profissional o que está em "profissional".
+# O que está em "conhecimento" atende parcialmente (0,5), nunca como experiência comprovada.
+nome: Jean Carlos Rothenburg
+
+skills:
+  profissional:          # usadas em produção na IPM Sistemas (mais de 3 anos, encerrada em fev/2026)
+    - nome: PHP
+      anos: 3
+    - nome: JavaScript
+      anos: 3
+    - nome: TypeScript
+      anos: 3
+    - nome: SQL
+      anos: 3
+    - nome: Vue.js
+      anos: 3
+      sinonimos: [vue, vuejs, vue 2, vue 3]
+    - nome: HTML
+      anos: 3
+    - nome: CSS
+      anos: 3
+    - nome: PostgreSQL
+      anos: 3
+      sinonimos: [postgres, banco de dados relacional, bancos de dados relacionais, banco relacional, modelagem de dados]
+    - nome: APIs REST
+      anos: 3
+    - nome: SOAP
+      anos: 3
+      sinonimos: [web services soap, wsdl]
+    - nome: Programação Orientada a Objetos
+      sinonimos: [poo, orientacao a objetos, oop]
+    - nome: SOLID
+    - nome: Design Patterns
+      sinonimos: [padroes de projeto]
+    - nome: Clean Code
+      sinonimos: [codigo limpo, boas praticas de codigo]
+    - nome: Algoritmos e estruturas de dados
+      sinonimos: [algoritmos, estruturas de dados, logica de programacao]
+    - nome: Full Stack
+      sinonimos: [fullstack, desenvolvimento full stack, desenvolvimento web]
+  conhecimento:          # estudos e projetos, sem experiência profissional
+    - nome: Python
+    - nome: Java
+    - nome: Laravel
+    - nome: Node.js
+    - nome: NestJS
+      sinonimos: [nest, nest.js]
+    - nome: React
+    - nome: Next.js
+      sinonimos: [nextjs, next]
+    - nome: React Native
+    - nome: Vuetify
+    - nome: Pinia
+      sinonimos: [vuex]
+    - nome: AJAX
+    - nome: Docker
+    - nome: CI/CD
+    - nome: Git
+      sinonimos: [git flow, gitflow, github, gitlab, versionamento]
+    - nome: SonarQube
+      sinonimos: [sonar, analise estatica]
+    - nome: TDD
+    - nome: Testes automatizados
+      sinonimos: [testes unitarios, testes de integracao, testes e2e]
+    - nome: Cypress
+    - nome: JUnit
+    - nome: Arquitetura de software
+      sinonimos: [arquitetura]
+    - nome: Microsserviços
+      sinonimos: [microservicos, microservices]
+    - nome: RabbitMQ
+      sinonimos: [mensageria, filas, message broker]
+    - nome: UML
+    - nome: Firebase
+    - nome: Scrum
+    - nome: Kanban
+    - nome: IA generativa
+      sinonimos: [claude, codex, desenvolvimento assistido por ia, llm, ia]
+
+formacao:
+  - Bacharelado em Engenharia de Software (UDESC), em andamento
+  - Técnico em Informática Integrado ao Ensino Médio (IFC), concluído
+graduacao_em_andamento: true
+
+idiomas:
+  ingles: tecnico
+
+localidade:
+  cidade_base: Presidente Getúlio
+  uf_base: SC
+  raio_km: 70
+  cidades_aceitas_extra: []
+
+filtros:
+  senioridades_aceitas: [junior, pleno]
+  max_anos_exigidos: 4        # tem mais de 3 anos de experiência; vagas que pedem 5+ são descartadas
+  contratos_aceitos: [clt, pj]
+  titulos_incluir:
+    - desenvolvedor
+    - desenvolvedora
+    - developer
+    - dev
+    - programador
+    - programadora
+    - engenheiro de software
+    - engenheira de software
+    - software engineer
+    - back-end
+    - backend
+    - front-end
+    - frontend
+    - full-stack
+    - fullstack
+    - full stack
+  titulos_excluir:
+    - estagio
+    - estagiario
+    - estagiaria
+    - trainee
+    - jovem aprendiz
+    - senior
+    - sr
+    - especialista
+    - lider
+    - tech lead
+    - head
+    - gerente
+    - coordenador
+    - arquiteto
+    - staff
+    - principal
+    - qa
+    - quality assurance
+    - engenheiro de dados
+    - engenheira de dados
+    - cientista de dados
+    - analista de dados
+    - data engineer
+    - data scientist
+    - mobile
+    - android
+    - ios
+    - flutter
+    - suporte
+    - infraestrutura
+    - devops
+    - sre
+    - salesforce
+    - sap
+    - abap
+
+nota:
+  corte: 8
+  peso_obrigatorio: 0.8
+  peso_diferencial: 0.2
+  trava_obrigatorio_central: 7
+
+coleta:
+  termos_busca:
+    - desenvolvedor full stack
+    - desenvolvedor php
+    - desenvolvedor vue
+    - desenvolvedor backend
+    - desenvolvedor frontend
+    - engenheiro de software
+  repositorios_github:
+    - backend-br/vagas
+    - frontendbr/vagas
+    - react-brasil/vagas
