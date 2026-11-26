@@ -63,8 +63,8 @@ def test_nota_completa(perfil):
         {"nome": "Docker", "tipo": "diferencial", "peso": 1},
     ]
     nota, det = calcular_nota(reqs, perfil)
-    # O = 1,0; D = 0,5 -> 10 × (0,8 + 0,1) = 9,0
-    assert nota == 9.0
+    # O = 1,0 -> 10; diferencial só soma (máximo 10)
+    assert nota == 10.0
     assert "Java" in det["atende_profissional"] and "Docker (diferencial)" in det["atende_conhecimento"]
 
 
@@ -113,14 +113,38 @@ def test_perfil_real_do_jean():
     assert p.nivel_de("Docker")[0] == "conhecimento"
     assert p.nivel_de("Golang")[0] is None
     nota, det = calcular_nota([{"nome": "Graduação completa em TI", "tipo": "obrigatorio", "peso": 1}], p)
-    assert nota == 5.0
+    assert nota == 6.0
     nota, det = calcular_nota([
         {"nome": "PHP", "tipo": "obrigatorio", "peso": 3},
         {"nome": "Vue.js", "tipo": "obrigatorio", "peso": 3},
         {"nome": "PostgreSQL", "tipo": "obrigatorio", "peso": 2},
         {"nome": "Laravel", "tipo": "diferencial", "peso": 1},
     ], p)
-    assert nota == 9.0 and det["atende_conhecimento"] == ["Laravel (diferencial)"]
+    assert nota == 10.0 and det["atende_conhecimento"] == ["Laravel (diferencial)"]
+
+
+def test_nota_vaga_olx_e_vagas_ruins():
+    """Casos reais de referência: a vaga da OLX (Node/TS, nada faltando) tem de passar do corte,
+    e vagas de outra stack continuam baixas."""
+    from pathlib import Path
+
+    from job_finder.perfil import carregar_perfil
+
+    p = carregar_perfil(Path(__file__).resolve().parents[1] / "perfil.yaml")
+    O, D = "obrigatorio", "diferencial"
+
+    def nota(rs):
+        return calcular_nota([{"nome": n, "tipo": t, "peso": w} for n, t, w in rs], p)[0]
+
+    olx = [("Node.js", O, 3), ("TypeScript", O, 3), ("SQL", O, 2), ("Modelagem de dados", O, 1),
+           ("Microsserviços", O, 2), ("APIs REST", O, 2), ("Testes automatizados", O, 1), ("Git", O, 1),
+           ("SOLID", O, 1), ("Clean Code", O, 1), ("Scrum", O, 1),
+           ("NestJS", D, 1), ("RabbitMQ", D, 1), ("CI/CD", D, 1), ("Docker", D, 1), ("AWS", D, 1)]
+    assert nota(olx) >= 8.5
+    assert nota(olx[:11]) >= 8.0  # sem diferenciais continua acima do corte
+    assert nota([("Java", O, 3), ("Spring Boot", O, 3), ("SQL", O, 2), ("Kafka", O, 1)]) <= 5
+    assert nota([("Delphi", O, 3), ("Firebird", O, 2), ("POO", O, 1)]) <= 3
+    assert nota([("React", O, 3), ("Node.js", O, 3), ("MongoDB", O, 2)]) < 7
 
 
 def test_titulo_vence_area_outro_do_llm(perfil):

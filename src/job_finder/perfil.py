@@ -65,8 +65,9 @@ class Perfil:
     max_anos_exigidos: int = 4
     contratos_aceitos: list[str] = field(default_factory=lambda: ["clt", "pj"])
     nota_corte: float = 8.0
-    peso_obrigatorio: float = 0.8
-    peso_diferencial: float = 0.2
+    valor_conhecimento: float = 0.6
+    valor_conhecimento_pratica: float = 0.8
+    bonus_diferenciais: float = 0.5
     trava_obrigatorio_central: float = 7.0
     termos_busca: list[str] = field(default_factory=list)
     titulos_incluir: list[str] = field(default_factory=list)
@@ -150,8 +151,9 @@ def carregar_perfil(caminho: str | Path) -> Perfil:
         titulos_incluir=filtros.get("titulos_incluir", []) or [],
         titulos_excluir=filtros.get("titulos_excluir", []) or [],
         nota_corte=float(nota.get("corte", 8)),
-        peso_obrigatorio=float(nota.get("peso_obrigatorio", 0.8)),
-        peso_diferencial=float(nota.get("peso_diferencial", 0.2)),
+        valor_conhecimento=float(nota.get("valor_conhecimento", 0.6)),
+        valor_conhecimento_pratica=float(nota.get("valor_conhecimento_pratica", 0.8)),
+        bonus_diferenciais=float(nota.get("bonus_diferenciais", 0.5)),
         trava_obrigatorio_central=float(nota.get("trava_obrigatorio_central", 7)),
         termos_busca=coleta.get("termos_busca", []) or [],
         repositorios_github=coleta.get("repositorios_github", []) or [],

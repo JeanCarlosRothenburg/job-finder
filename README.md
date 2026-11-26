@@ -22,9 +22,11 @@ Pilha (swipe) → Confirmar → Claude gera textos via MCP → você abre a vaga
   ou híbrido só até 70 km de Presidente Getúlio/SC (coordenadas do IBGE); remoto em qualquer lugar;
   descarta vagas em inglês, que pedem inglês avançado/fluente ou fuso do exterior. Toda vaga
   descartada guarda o motivo (aba Recusadas).
-- **Nota**: o Ollama (modelo de ~4B) só extrai os requisitos. O código calcula:
-  valor 1,0 (experiência profissional), 0,5 (só conhecimento) ou 0; `nota = 10 × (0,8 × O + 0,2 × D)`,
-  limitada a 7 se faltar um obrigatório central (peso 3). Pesos e corte ficam no `perfil.yaml`.
+- **Nota**: o Ollama (modelo de ~4B) só extrai os requisitos. O código calcula: valor 1,0
+  (experiência profissional); só conhecimento vale 0,8 em práticas e ferramentas (Git, testes,
+  Docker, ágil) e 0,6 em tecnologias centrais; 0 se não atende. `nota = 10 × O + 0,5 × D` (máximo 10),
+  em que O é a cobertura dos obrigatórios e D a dos diferenciais, que só somam. Limitada a 7 se
+  faltar um obrigatório central (peso 3). Valores e corte (8) ficam no `perfil.yaml`.
   Sem Ollama, uma heurística local assume a extração e o app avisa no topo.
 - **Claude**: o servidor MCP expõe as vagas confirmadas; o Claude escreve os textos com as skills
   `/gupy` e `/linkedin`, revisa a zona cinzenta com `/analisar` e grava tudo de volta no app.

@@ -160,10 +160,11 @@ filtros:
     - abap
 
 nota:
-  corte: 7.5                  # Jean pediu 7,5 em 2026-11-26 (antes 8)
-  peso_obrigatorio: 0.8
-  peso_diferencial: 0.2
-  trava_obrigatorio_central: 7
+  corte: 8                        # entra em Compatíveis com nota >= corte
+  valor_conhecimento: 0.6         # tecnologia central só com conhecimento (linguagem, framework, banco)
+  valor_conhecimento_pratica: 0.8 # prática ou ferramenta só com conhecimento (Git, testes, Docker, ágil)
+  bonus_diferenciais: 0.5         # diferenciais só somam, até +0,5; faltar diferencial não reduz a nota
+  trava_obrigatorio_central: 7    # nota máxima se faltar um obrigatório de peso 3
 
 coleta:
   termos_busca:
