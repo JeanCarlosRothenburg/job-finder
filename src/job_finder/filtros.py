@@ -62,6 +62,19 @@ def parece_ingles(texto: str) -> bool:
     return en > 3 * max(pt, 1)
 
 
+_TITULO_AREA = [
+    "back-end", "backend", "back end", "front-end", "frontend", "front end", "full-stack", "fullstack",
+    "full stack", "desenvolvedor de software", "desenvolvedora de software", "pessoa desenvolvedora de software",
+    "engenheiro de software", "engenheira de software", "software engineer", "software developer",
+]
+
+
+def titulo_indica_area(titulo: str) -> bool:
+    """O título já diz back-end, front-end, full-stack ou desenvolvimento de software."""
+    n = normalizar(titulo)
+    return any(contem_termo(n, t) for t in _TITULO_AREA)
+
+
 def _titulo_ok(titulo: str, perfil: Perfil) -> str:
     n = normalizar(titulo)
     for termo in perfil.titulos_excluir:
@@ -122,7 +135,8 @@ def pos_filtro(vaga, extracao: dict, perfil: Perfil) -> ResultadoFiltro:
     """Etapa 2: confirma com os campos extraídos pelo LLM."""
     avisos: list[str] = []
     area = extracao.get("cargo_area")
-    if area == "outro":
+    # o modelo de 4B às vezes marca "outro" em vaga de back-end: o título explícito vale mais
+    if area == "outro" and not titulo_indica_area(vaga.titulo):
         return ResultadoFiltro(False, "área fora de back-end, front-end ou full-stack")
 
     sen = extracao.get("senioridade", "nao_informado")

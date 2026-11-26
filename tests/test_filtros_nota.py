@@ -120,3 +120,12 @@ def test_perfil_real_do_jean():
         {"nome": "Laravel", "tipo": "diferencial", "peso": 1},
     ], p)
     assert nota == 9.0 and det["atende_conhecimento"] == ["Laravel (diferencial)"]
+
+
+def test_titulo_vence_area_outro_do_llm(perfil):
+    ext = {"cargo_area": "outro", "senioridade": "pleno", "anos_experiencia_min": None, "modelo_trabalho": "remoto",
+           "ingles": "nao_exigido", "vaga_em_ingles": False, "fuso_exterior": False, "contrato": "clt"}
+    # caso real: vaga do Grupo OLX descartada porque o qwen3:4b marcou "outro"
+    assert pos_filtro(vaga(titulo="Pessoa Desenvolvedora de Software Backend Pleno"), ext, perfil).aprovada
+    assert pos_filtro(vaga(titulo="Desenvolvedor Full Stack"), ext, perfil).aprovada
+    assert not pos_filtro(vaga(titulo="Desenvolvedor"), ext, perfil).aprovada
