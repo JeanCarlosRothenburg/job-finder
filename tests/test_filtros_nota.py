@@ -90,7 +90,8 @@ def test_pos_filtro(perfil):
     assert pos_filtro(vaga(), ext, perfil).aprovada
     assert not pos_filtro(vaga(), {**ext, "senioridade": "senior"}, perfil).aprovada
     assert not pos_filtro(vaga(), {**ext, "fuso_exterior": True}, perfil).aprovada
-    assert not pos_filtro(vaga(titulo="Desenvolvedor Java Pleno"), {**ext, "cargo_area": "outro"}, perfil).aprovada
+    r = pos_filtro(vaga(titulo="Desenvolvedor Java Pleno"), {**ext, "cargo_area": "outro"}, perfil)
+    assert r.aprovada and "área não identificada pelo modelo" in r.avisos
     assert not pos_filtro(vaga(modelo=""), {**ext, "modelo_trabalho": "presencial", "cidade": "Curitiba", "uf": "PR"}, perfil).aprovada
 
 
@@ -128,4 +129,17 @@ def test_titulo_vence_area_outro_do_llm(perfil):
     # caso real: vaga do Grupo OLX descartada porque o qwen3:4b marcou "outro"
     assert pos_filtro(vaga(titulo="Pessoa Desenvolvedora de Software Backend Pleno"), ext, perfil).aprovada
     assert pos_filtro(vaga(titulo="Desenvolvedor Full Stack"), ext, perfil).aprovada
-    assert not pos_filtro(vaga(titulo="Desenvolvedor"), ext, perfil).aprovada
+    # título genérico não descarta: decide a nota pelos requisitos x currículo
+    assert pos_filtro(vaga(titulo="Desenvolvedor"), ext, perfil).aprovada
+
+
+def test_variacoes_de_titulo(perfil):
+    from job_finder.filtros import _titulo_ok
+
+    for t in ["Desenvolvedor Back-end", "Dev Backend", "Back End Developer", "Front-end Pleno", "Frontend Jr",
+              "Desenvolvedor Full-Stack", "Fullstack Developer", "Full Stack PHP", "Programador PHP",
+              "Engenheiro de Software", "Software Engineer", "Pessoa Desenvolvedora de Software",
+              "Desenvolvedor(a) PHP", "Analista Desenvolvedor", "Analista de Desenvolvimento de Sistemas"]:
+        assert _titulo_ok(t, perfil) == "", t
+    for t in ["Engenheiro de Dados", "Analista de QA", "Desenvolvedor Mobile Flutter", "Desenvolvedor Sênior"]:
+        assert _titulo_ok(t, perfil) != "", t

@@ -134,10 +134,11 @@ def pre_filtro(vaga, perfil: Perfil) -> ResultadoFiltro:
 def pos_filtro(vaga, extracao: dict, perfil: Perfil) -> ResultadoFiltro:
     """Etapa 2: confirma com os campos extraídos pelo LLM."""
     avisos: list[str] = []
-    area = extracao.get("cargo_area")
-    # o modelo de 4B às vezes marca "outro" em vaga de back-end: o título explícito vale mais
-    if area == "outro" and not titulo_indica_area(vaga.titulo):
-        return ResultadoFiltro(False, "área fora de back-end, front-end ou full-stack")
+    # A área não descarta nem reduz a nota: títulos genéricos ("Desenvolvedor", "Programador",
+    # "Engenheiro de Software") são decididos pela correspondência dos requisitos com o currículo.
+    # Outras áreas (dados, QA, mobile, infra...) já caem no pré-filtro pelo título.
+    if extracao.get("cargo_area") == "outro" and not titulo_indica_area(vaga.titulo):
+        avisos.append("área não identificada pelo modelo")
 
     sen = extracao.get("senioridade", "nao_informado")
     if sen not in ("nao_informado", "", None) and sen not in perfil.senioridades_aceitas:

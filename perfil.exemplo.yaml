@@ -42,23 +42,32 @@ filtros:
   senioridades_aceitas: [junior, pleno]
   max_anos_exigidos: 4        # vagas que pedem 5+ anos são descartadas
   contratos_aceitos: [clt, pj]
-  titulos_incluir:
+  titulos_incluir:   # variações com hífen, espaço ou junto são equivalentes (back-end = back end = backend)
     - desenvolvedor
     - desenvolvedora
+    - pessoa desenvolvedora
+    - desenvolvimento
     - developer
     - dev
     - programador
     - programadora
+    - programacao
+    - engenheiro
+    - engenheira
+    - engineer
     - engenheiro de software
     - engenheira de software
     - software engineer
+    - analista desenvolvedor
+    - analista programador
+    - analista de sistemas
     - back-end
     - backend
     - front-end
     - frontend
     - full-stack
     - fullstack
-    - full stack
+    - web
   titulos_excluir:
     - estagio
     - estagiario

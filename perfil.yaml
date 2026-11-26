@@ -96,23 +96,32 @@ filtros:
   senioridades_aceitas: [junior, pleno]
   max_anos_exigidos: 4        # tem mais de 3 anos de experiência; vagas que pedem 5+ são descartadas
   contratos_aceitos: [clt, pj]
-  titulos_incluir:
+  titulos_incluir:   # variações com hífen, espaço ou junto são equivalentes (back-end = back end = backend)
     - desenvolvedor
     - desenvolvedora
+    - pessoa desenvolvedora
+    - desenvolvimento
     - developer
     - dev
     - programador
     - programadora
+    - programacao
+    - engenheiro
+    - engenheira
+    - engineer
     - engenheiro de software
     - engenheira de software
     - software engineer
+    - analista desenvolvedor
+    - analista programador
+    - analista de sistemas
     - back-end
     - backend
     - front-end
     - frontend
     - full-stack
     - fullstack
-    - full stack
+    - web
   titulos_excluir:
     - estagio
     - estagiario
@@ -151,7 +160,7 @@ filtros:
     - abap
 
 nota:
-  corte: 8
+  corte: 7.5                  # Jean pediu 7,5 em 2026-11-26 (antes 8)
   peso_obrigatorio: 0.8
   peso_diferencial: 0.2
   trava_obrigatorio_central: 7
