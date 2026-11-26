@@ -90,7 +90,7 @@ def test_pos_filtro(perfil):
     assert pos_filtro(vaga(), ext, perfil).aprovada
     assert not pos_filtro(vaga(), {**ext, "senioridade": "senior"}, perfil).aprovada
     assert not pos_filtro(vaga(), {**ext, "fuso_exterior": True}, perfil).aprovada
-    assert not pos_filtro(vaga(), {**ext, "cargo_area": "outro"}, perfil).aprovada
+    assert not pos_filtro(vaga(titulo="Desenvolvedor Java Pleno"), {**ext, "cargo_area": "outro"}, perfil).aprovada
     assert not pos_filtro(vaga(modelo=""), {**ext, "modelo_trabalho": "presencial", "cidade": "Curitiba", "uf": "PR"}, perfil).aprovada
 
 
