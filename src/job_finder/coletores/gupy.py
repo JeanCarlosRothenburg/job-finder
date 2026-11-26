@@ -1,7 +1,9 @@
 """Coletor da Gupy: JSON público usado pelo portal de vagas (não é API oficial e pode mudar).
 
-Os endpoints antigos (`/api/v1/jobs`) passaram a responder 404. O coletor tenta, em ordem, os
-endereços de `ENDPOINTS` (ou o de `GUPY_ENDPOINT`, se definido) e usa o primeiro que responder.
+Desde nov/2026 o portal usa `https://portal.gupy.io/api/job-search/jobs?jobName=...&limit=...&offset=...`
+(os antigos `/api/v1/jobs` e `portal.api.gupy.io/api/job` respondem 404). A resposta traz a
+descrição completa e `pagination.total`. O coletor tenta, em ordem, os endereços de `ENDPOINTS`
+(ou o de `GUPY_ENDPOINT`, se definido) e usa o primeiro que responder.
 """
 
 from __future__ import annotations
@@ -21,6 +23,7 @@ from .base import USER_AGENT, VagaColetada, parse_data
 log = logging.getLogger(__name__)
 
 ENDPOINTS = [
+    "https://portal.gupy.io/api/job-search/jobs",
     "https://portal.api.gupy.io/api/job",
     "https://portal.api.gupy.io/api/v1/jobs",
     "https://employability-portal.gupy.io/api/v1/jobs",
@@ -33,7 +36,7 @@ def _parse_item(item: dict) -> VagaColetada:
     modelo = MODELOS.get(str(item.get("workplaceType", "")).lower(), "")
     if not modelo and item.get("isRemoteWork"):
         modelo = "remoto"
-    empresa = item.get("careerPageName") or item.get("companyName") or ""
+    empresa = (item.get("careerPageName") or item.get("companyName") or "").strip().rstrip(">").strip()
     url = item.get("jobUrl") or item.get("careerPageUrl") or ""
     tipo = str(item.get("type", ""))
     contrato = "clt" if "effective" in tipo else "pj" if "legal_entity" in tipo else ""
@@ -92,7 +95,7 @@ def extrair_descricao_pagina(html: str) -> str:
 class ColetorGupy:
     nome = "gupy"
 
-    def __init__(self, termos: list[str], limite_por_termo: int = 100, pausa: float = 1.0, cliente: httpx.Client | None = None):
+    def __init__(self, termos: list[str], limite_por_termo: int = 200, pausa: float = 1.0, cliente: httpx.Client | None = None):
         self.termos = termos or ["desenvolvedor"]
         self.limite = limite_por_termo
         self.pausa = pausa
@@ -104,7 +107,8 @@ class ColetorGupy:
         ultimo_erro: Exception | None = None
         for url in candidatos:
             try:
-                r = self.cli.get(url, params={"name": termo, "jobName": termo, "offset": offset, "limit": min(self.limite, 100)})
+                r = self.cli.get(url, params={"jobName": termo, "offset": offset, "limit": min(self.limite, 100)},
+                                 headers={"Accept": "application/json", "Referer": "https://portal.gupy.io/"})
                 if r.status_code == 404:
                     continue
                 r.raise_for_status()
@@ -128,11 +132,18 @@ class ColetorGupy:
     def coletar(self) -> Iterable[VagaColetada]:
         vistos: set[str] = set()
         for termo in self.termos:
-            dados = self._buscar(termo, 0)
-            for item in dados.get("data", []) or []:
-                vaga = _parse_item(item)
-                if vaga.id_externo in vistos or not vaga.titulo:
-                    continue
-                vistos.add(vaga.id_externo)
-                yield vaga
-            time.sleep(self.pausa)
+            offset = 0
+            while offset < self.limite:
+                dados = self._buscar(termo, offset)
+                itens = dados.get("data", []) or []
+                for item in itens:
+                    vaga = _parse_item(item)
+                    if vaga.id_externo in vistos or not vaga.titulo:
+                        continue
+                    vistos.add(vaga.id_externo)
+                    yield vaga
+                total = (dados.get("pagination") or {}).get("total") or 0
+                offset += len(itens)
+                time.sleep(self.pausa)
+                if not itens or offset >= total:
+                    break

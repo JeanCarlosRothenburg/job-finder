@@ -19,9 +19,10 @@ def test_issue_github():
 
 def test_gupy_com_endpoint_simulado():
     def responder(req: httpx.Request):
-        if req.url.path == "/api/job":
-            return httpx.Response(200, json={"data": [{
-                "id": 9, "name": "Desenvolvedor Full Stack Júnior", "careerPageName": "Empresa Y",
+        if req.url.path == "/api/job-search/jobs":
+            assert req.url.params["jobName"] == "desenvolvedor"
+            return httpx.Response(200, json={"pagination": {"total": 1, "limit": 100, "offset": 0}, "data": [{
+                "id": 9, "name": "Desenvolvedor Full Stack Júnior", "careerPageName": "Empresa Y>",
                 "city": "Indaial", "state": "Santa Catarina", "workplaceType": "hybrid",
                 "type": "vacancy_type_effective", "jobUrl": "https://y.gupy.io/jobs/9",
                 "publishedDate": "2026-11-22T12:00:00.000Z", "description": "<p>Vaga</p>",
@@ -33,7 +34,7 @@ def test_gupy_com_endpoint_simulado():
     assert len(vagas) == 1
     v = vagas[0]
     assert (v.uf, v.modelo, v.contrato, v.empresa) == ("SC", "hibrido", "clt", "Empresa Y")
-    assert col.endpoint.endswith("/api/job")
+    assert col.endpoint == "https://portal.gupy.io/api/job-search/jobs"
 
 
 def test_descricao_next_data():
@@ -49,3 +50,11 @@ def test_email_linkedin():
     v = vagas[0]
     assert v.id_externo == "4012345678" and v.sem_descricao and v.url.endswith("/4012345678/")
     assert v.uf == "SC" and v.modelo == "hibrido"
+
+
+def test_descricao_enxuta_corta_beneficios():
+    from job_finder.extracao import _descricao_enxuta
+
+    texto = "Requisitos\n" + "- PHP e Vue.js\n" * 60 + "Nossos benefícios\nVale refeição\n"
+    assert "benef" not in _descricao_enxuta(texto)
+    assert len(_descricao_enxuta("x" * 9000)) == 3500

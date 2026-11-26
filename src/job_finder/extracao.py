@@ -64,11 +64,26 @@ Regras:
 Exemplo de requisito: {"nome": "Node.js", "tipo": "obrigatorio", "peso": 3}"""
 
 
+_RODAPE = re.compile(
+    r"\n[^\n]{0,40}(benef[ií]cios|o que oferecemos|nossos benef|sobre a empresa|quem somos|etapas do processo)[^\n]{0,60}\n.*",
+    re.I | re.S,
+)
+
+
+def _descricao_enxuta(texto: str, limite: int = 3500) -> str:
+    """Corta benefícios e etapas do processo (não têm requisitos) e limita o tamanho: menos tokens, mais rápido."""
+    t = texto or ""
+    m = _RODAPE.search(t)
+    if m and m.start() > 400:
+        t = t[: m.start()]
+    return t[:limite]
+
+
 def _mensagem_usuario(vaga) -> str:
     return (
         f"Título: {vaga.titulo}\nEmpresa: {vaga.empresa}\n"
         f"Local informado: {vaga.cidade}/{vaga.uf} ({vaga.modelo or 'modelo não informado'})\n"
-        f"Etiquetas: {', '.join(vaga.etiquetas or [])}\n\nDescrição:\n{(vaga.descricao or '')[:6000]}"
+        f"Etiquetas: {', '.join(vaga.etiquetas or [])}\n\nDescrição:\n{_descricao_enxuta(vaga.descricao)}"
     )
 
 
@@ -82,8 +97,8 @@ def extrair_ollama(vaga, url: str, modelo: str, timeout: float = 240) -> dict:
         "format": SCHEMA,
         "stream": False,
         "think": False,  # Qwen3: desliga o modo de raciocínio (mais rápido)
-        "keep_alive": "5m",
-        "options": {"temperature": 0, "num_ctx": 8192},
+        "keep_alive": "30m",  # mantém o modelo carregado entre vagas (evita recarregar a cada uma)
+        "options": {"temperature": 0, "num_ctx": 4096, "num_predict": 900},
     }
     with httpx.Client(timeout=timeout) as cli:
         r = cli.post(f"{url}/api/chat", json=corpo)
