@@ -258,15 +258,43 @@ function resultadoTexto(v) {
 }
 
 // ---------------------------------------------------------------- Recusadas
-async function renderRecusadas() {
-  const vagas = await api("/api/vagas?status=recusada,abaixo_da_nota,descartada_filtro&limite=150");
-  const rotulo = { recusada: "Recusada por você", abaixo_da_nota: "Abaixo da nota", descartada_filtro: "Filtro" };
-  $("#lista-recusadas").innerHTML = vagas.map((v) => `<div class="item"><div class="cab">
-    <div><b>${esc(v.titulo)}</b> · ${esc(v.empresa)}<br><small>${esc(rotulo[v.status])}${v.motivo_descarte ? ": " + esc(v.motivo_descarte) : ""}</small></div>
-    <div>${v.nota ?? ""} · <a href="${esc(v.url)}" target="_blank" rel="noopener">link</a>
-    ${v.status === "recusada" ? ` · <button class="link" data-volta="${v.id}">voltar para a pilha</button>` : ""}</div></div></div>`).join("") ||
-    `<p class="dica">Nada aqui ainda.</p>`;
+const ORIGEM = { agendado: "Busca agendada", manual: "Busca manual", vaga_avulsa: "Vaga avulsa", recalculo: "Recálculo", anterior: "Antes do registro de ciclos" };
+const ROTULO_RECUSA = { recusada: "Recusada por você", abaixo_da_nota: "Abaixo da nota", descartada_filtro: "Filtro" };
+const abertos = new Set();
+
+function hora(iso) {
+  if (!iso) return "";
+  const d = new Date(String(iso).endsWith("Z") || String(iso).includes("+") ? iso : iso + "Z");
+  return d.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 }
+
+async function renderRecusadas() {
+  const grupos = await api("/api/recusadas");
+  if (!grupos.length) { $("#lista-recusadas").innerHTML = `<p class="dica">Nada aqui ainda.</p>`; return; }
+  $("#lista-recusadas").innerHTML = grupos.map((g, idx) => {
+    const c = g.ciclo, k = g.contagem;
+    const chave = String(c.id ?? "anterior");
+    const aberto = abertos.size ? abertos.has(chave) : idx === 0;
+    const periodo = c.iniciado_em ? `${hora(c.iniciado_em)}${c.terminado_em ? " → " + hora(c.terminado_em).slice(-5) : " (em andamento)"}` : "";
+    const partes = [k.descartada_filtro && `${k.descartada_filtro} no filtro`, k.abaixo_da_nota && `${k.abaixo_da_nota} abaixo da nota`, k.recusada && `${k.recusada} por você`].filter(Boolean).join(", ");
+    return `<details class="ciclo" data-ciclo="${esc(chave)}" ${aberto ? "open" : ""}>
+      <summary><b>${c.id ? "Ciclo #" + c.id : "Sem ciclo"}</b> · ${esc(ORIGEM[c.origem] || c.origem)}${periodo ? " · " + esc(periodo) : ""}
+        <span class="qtd">${g.vagas.length} recusada${g.vagas.length > 1 ? "s" : ""}${partes ? " (" + esc(partes) + ")" : ""}</span></summary>
+      ${g.vagas.map((v) => `<div class="item"><div class="cab">
+        <div><b>${esc(v.titulo)}</b> · ${esc(v.empresa)}<br>
+          <small>${esc(ROTULO_RECUSA[v.status])}${v.motivo_descarte ? ": " + esc(v.motivo_descarte) : ""}</small><br>
+          <small class="horario">Recusada em ${esc(hora(v.recusada_em) || "?")}${v.status === "recusada" && v.processada_em ? " · processada em " + esc(hora(v.processada_em)) : ""}</small></div>
+        <div>${v.nota ?? ""} · <a href="${esc(v.url)}" target="_blank" rel="noopener">link</a>
+        ${v.status === "recusada" ? ` · <button class="link" data-volta="${v.id}">voltar para a pilha</button>` : ""}</div></div></div>`).join("")}
+    </details>`;
+  }).join("");
+}
+$("#lista-recusadas").addEventListener("toggle", (e) => {
+  const d = e.target.closest("details.ciclo");
+  if (!d) return;
+  if (!abertos.size) document.querySelectorAll("details.ciclo[open]").forEach((x) => abertos.add(x.dataset.ciclo));
+  d.open ? abertos.add(d.dataset.ciclo) : abertos.delete(d.dataset.ciclo);
+}, true);
 $("#lista-recusadas").addEventListener("click", async (e) => {
   const id = e.target.dataset.volta;
   if (!id) return;

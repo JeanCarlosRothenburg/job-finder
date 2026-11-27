@@ -54,6 +54,18 @@ class Vaga(SQLModel, table=True):
     nota: Optional[float] = Field(default=None, index=True)
     revisada_claude: bool = False
     observacao_claude: str = ""
+    processada_em: Optional[datetime] = None  # quando o filtro/nota decidiu o status
+    ciclo_id: Optional[int] = Field(default=None, index=True)
+
+
+class Ciclo(SQLModel, table=True):
+    """Uma rodada de processamento: agendada, manual (botão/CLI), vaga avulsa ou recálculo."""
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    origem: str  # agendado | manual | vaga_avulsa | recalculo
+    iniciado_em: datetime = Field(default_factory=agora)
+    terminado_em: Optional[datetime] = None
+    vagas_processadas: int = 0
 
 
 class Analise(SQLModel, table=True):

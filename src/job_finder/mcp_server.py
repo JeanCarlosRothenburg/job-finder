@@ -139,7 +139,7 @@ def adicionar_vaga(url: str, titulo: str, descricao: str, empresa: str = "", cid
         if not v:
             raise ValueError("vaga já cadastrada")
         vid = v.id
-    processar_pendentes(_cfg, limite=5)
+    processar_pendentes(_cfg, limite=5, origem="vaga_avulsa")
     with sessao(_cfg.db) as s:
         return _compacta(servicos.vaga_resumo(s, s.get(servicos.Vaga, vid)))
 
@@ -149,7 +149,7 @@ def completar_descricao(vaga_id: int, descricao: str) -> dict:
     """Cola a descrição de uma vaga vinda de alerta de e-mail (status sem_descricao) e a analisa."""
     with sessao(_cfg.db) as s:
         servicos.definir_descricao(s, vaga_id, descricao)
-    processar_pendentes(_cfg, limite=5)
+    processar_pendentes(_cfg, limite=5, origem="vaga_avulsa")
     with sessao(_cfg.db) as s:
         return _compacta(servicos.vaga_resumo(s, s.get(servicos.Vaga, vaga_id)))
 

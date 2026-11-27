@@ -32,8 +32,25 @@ def obter_engine(caminho: str):
             cur.close()
 
         SQLModel.metadata.create_all(engine)
+        _migrar(engine)
         _engines[caminho] = engine
     return _engines[caminho]
+
+
+def _migrar(engine) -> None:
+    """Acrescenta colunas novas em bancos criados por versões anteriores (SQLite não faz isso sozinho)."""
+    from sqlalchemy import inspect, text
+
+    insp = inspect(engine)
+    with engine.begin() as conn:
+        for tabela in SQLModel.metadata.sorted_tables:
+            if not insp.has_table(tabela.name):
+                continue
+            existentes = {c["name"] for c in insp.get_columns(tabela.name)}
+            for col in tabela.columns:
+                if col.name not in existentes:
+                    tipo = col.type.compile(dialect=engine.dialect)
+                    conn.execute(text(f'ALTER TABLE "{tabela.name}" ADD COLUMN "{col.name}" {tipo}'))
 
 
 def sessao(caminho: str) -> Session:

@@ -73,7 +73,7 @@ def main(argv: list[str] | None = None) -> None:
         elif a.cmd == "processar":
             r = pipeline.processar_pendentes(cfg, perfil)
         elif a.cmd == "ciclo":
-            r = pipeline.ciclo(cfg)
+            r = pipeline.ciclo(cfg, "manual")
         else:
             r = {"vagas_recalculadas": pipeline.recalcular_notas(cfg, perfil)}
         print(json.dumps(r, ensure_ascii=False, indent=2, default=str))

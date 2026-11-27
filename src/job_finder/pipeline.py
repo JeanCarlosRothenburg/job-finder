@@ -13,7 +13,7 @@ from .config import Config
 from .db import sessao
 from .extracao import VERSAO_PROMPT, extrair_heuristica, extrair_ollama, ollama_disponivel
 from .filtros import _titulo_ok, pos_filtro, pre_filtro
-from .modelos import Analise, FonteExecucao, Status, Vaga, agora
+from .modelos import Analise, Ciclo, FonteExecucao, Status, Vaga, agora
 from .nota import calcular_nota
 from .perfil import Perfil, carregar_perfil
 from .texto import chave_dedup, hash_texto
@@ -75,10 +75,17 @@ def coletar(cfg: Config, perfil: Perfil, nomes: list[str] | None = None) -> dict
 
 
 # ------------------------------------------------------------------ análise
-def analisar_vaga(s: Session, vaga: Vaga, perfil: Perfil, cfg: Config, usar_ollama: bool) -> Vaga:
+def _carimbar(vaga: Vaga, ciclo_id: int | None) -> None:
+    vaga.processada_em = agora()
+    if ciclo_id is not None:
+        vaga.ciclo_id = ciclo_id
+
+
+def analisar_vaga(s: Session, vaga: Vaga, perfil: Perfil, cfg: Config, usar_ollama: bool, ciclo_id: int | None = None) -> Vaga:
     r1 = pre_filtro(vaga, perfil)
     if not r1.aprovada:
         vaga.status, vaga.motivo_descarte = Status.DESCARTADA_FILTRO, r1.motivo
+        _carimbar(vaga, ciclo_id)
         s.add(vaga)
         s.commit()
         return vaga
@@ -92,11 +99,12 @@ def analisar_vaga(s: Session, vaga: Vaga, perfil: Perfil, cfg: Config, usar_olla
     if extracao is None:
         extracao, modelo_llm = extrair_heuristica(vaga), "heuristica"
 
-    _registrar(s, vaga, extracao, modelo_llm, perfil, r1.avisos)
+    _registrar(s, vaga, extracao, modelo_llm, perfil, r1.avisos, ciclo_id)
     return vaga
 
 
-def _registrar(s: Session, vaga: Vaga, extracao: dict, modelo_llm: str, perfil: Perfil, avisos: list[str]) -> None:
+def _registrar(s: Session, vaga: Vaga, extracao: dict, modelo_llm: str, perfil: Perfil, avisos: list[str],
+               ciclo_id: int | None = None) -> None:
     for campo, chave in (("senioridade", "senioridade"), ("contrato", "contrato")):
         if not getattr(vaga, campo) and extracao.get(chave) not in ("nao_informado", None):
             setattr(vaga, campo, extracao[chave])
@@ -120,19 +128,38 @@ def _registrar(s: Session, vaga: Vaga, extracao: dict, modelo_llm: str, perfil: 
         vaga.status, vaga.motivo_descarte = Status.COMPATIVEL, ""
     else:
         vaga.status, vaga.motivo_descarte = Status.ABAIXO_DA_NOTA, f"nota {nota} < {perfil.nota_corte}"
+    _carimbar(vaga, ciclo_id)
     s.add(vaga)
     s.commit()
 
 
-def processar_pendentes(cfg: Config, perfil: Perfil | None = None, limite: int = 200) -> dict[str, int]:
+def _abrir_ciclo(s: Session, origem: str) -> Ciclo:
+    c = Ciclo(origem=origem)
+    s.add(c)
+    s.commit()
+    s.refresh(c)
+    return c
+
+
+def _fechar_ciclo(s: Session, c: Ciclo, n: int) -> None:
+    c.terminado_em, c.vagas_processadas = agora(), n
+    s.add(c)
+    s.commit()
+
+
+def processar_pendentes(cfg: Config, perfil: Perfil | None = None, limite: int = 200, origem: str = "manual") -> dict[str, int]:
     perfil = perfil or carregar_perfil(cfg.perfil)
-    usar_ollama, _ = ollama_disponivel(cfg.ollama_url, cfg.ollama_modelo)
     contagem: dict[str, int] = {}
     with sessao(cfg.db) as s:
         pendentes = s.exec(select(Vaga).where(Vaga.status == Status.COLETADA).limit(limite)).all()
+        if not pendentes:
+            return contagem
+        usar_ollama, _ = ollama_disponivel(cfg.ollama_url, cfg.ollama_modelo)
+        c = _abrir_ciclo(s, origem)
         for vaga in pendentes:
-            analisar_vaga(s, vaga, perfil, cfg, usar_ollama)
+            analisar_vaga(s, vaga, perfil, cfg, usar_ollama, c.id)
             contagem[vaga.status] = contagem.get(vaga.status, 0) + 1
+        _fechar_ciclo(s, c, len(pendentes))
     return contagem
 
 
@@ -142,30 +169,33 @@ def recalcular_notas(cfg: Config, perfil: Perfil | None = None) -> int:
     n = 0
     with sessao(cfg.db) as s:
         vagas = s.exec(select(Vaga).where(Vaga.status.in_([Status.COMPATIVEL, Status.ABAIXO_DA_NOTA, Status.DESCARTADA_FILTRO]))).all()
+        c = _abrir_ciclo(s, "recalculo")
         for vaga in vagas:
             ultima = s.exec(select(Analise).where(Analise.vaga_id == vaga.id).order_by(Analise.id.desc())).first()
             r1 = pre_filtro(vaga, perfil)
             if not r1.aprovada:
                 vaga.status, vaga.motivo_descarte = Status.DESCARTADA_FILTRO, r1.motivo
+                _carimbar(vaga, c.id)
                 s.add(vaga)
                 s.commit()
             elif ultima:
-                _registrar(s, vaga, ultima.extracao_json, ultima.modelo_llm, perfil, r1.avisos)
+                _registrar(s, vaga, ultima.extracao_json, ultima.modelo_llm, perfil, r1.avisos, c.id)
             else:
                 vaga.status = Status.COLETADA
                 s.add(vaga)
                 s.commit()
             n += 1
+        _fechar_ciclo(s, c, n)
     return n
 
 
-def ciclo(cfg: Config) -> dict:
-    """Uma rodada completa (usada pelo agendador): coleta e análise."""
+def ciclo(cfg: Config, origem: str = "agendado") -> dict:
+    """Uma rodada completa (usada pelo agendador e pelo botão): coleta e análise."""
     if not _trava.acquire(blocking=False):
         return {"ignorado": "já existe um ciclo em andamento"}
     try:
         perfil = carregar_perfil(cfg.perfil)
-        return {"coleta": coletar(cfg, perfil), "analise": processar_pendentes(cfg, perfil)}
+        return {"coleta": coletar(cfg, perfil), "analise": processar_pendentes(cfg, perfil, origem=origem)}
     finally:
         _trava.release()
 

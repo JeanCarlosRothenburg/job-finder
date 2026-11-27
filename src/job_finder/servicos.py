@@ -6,7 +6,7 @@ from typing import Any
 
 from sqlmodel import Session, func, select
 
-from .modelos import Analise, Candidatura, FonteExecucao, Status, Vaga, agora
+from .modelos import Analise, Candidatura, Ciclo, FonteExecucao, Status, Vaga, agora
 
 
 class ErroServico(ValueError):
@@ -33,6 +33,8 @@ def vaga_resumo(s: Session, vaga: Vaga, com_descricao: bool = False) -> dict[str
     if com_descricao:
         d["descricao"] = vaga.descricao
     a = ultima_analise(s, vaga.id)
+    if not d.get("processada_em") and a:
+        d["processada_em"] = a.criada_em  # vagas processadas antes do registro de horário
     if a:
         det = a.detalhe_nota_json or {}
         d["analise"] = {
@@ -210,3 +212,35 @@ def texto_para_claude(s: Session, vaga_id: int) -> str:
         vaga.descricao,
     ]
     return "\n".join(linhas)
+
+
+RECUSADAS = [Status.RECUSADA, Status.ABAIXO_DA_NOTA, Status.DESCARTADA_FILTRO]
+
+
+def recusadas_por_ciclo(s: Session, limite_ciclos: int = 30) -> list[dict]:
+    """Recusadas agrupadas pelo ciclo que as processou, do mais recente para o mais antigo."""
+    vagas = s.exec(select(Vaga).where(Vaga.status.in_(RECUSADAS))).all()
+    grupos: dict[int | None, list[Vaga]] = {}
+    for v in vagas:
+        grupos.setdefault(v.ciclo_id, []).append(v)
+    ciclos = {c.id: c for c in s.exec(select(Ciclo).where(Ciclo.id.in_([k for k in grupos if k is not None]))).all()}
+
+    def chave(cid):
+        c = ciclos.get(cid)
+        return (c.iniciado_em.timestamp() if c and c.iniciado_em else 0.0, cid or 0)
+
+    saida = []
+    for cid in sorted(grupos, key=chave, reverse=True)[:limite_ciclos]:
+        itens = [vaga_resumo(s, v) for v in grupos[cid]]
+        for i in itens:  # hora da recusa: sua decisão (recusada) ou a do processamento (filtro/nota)
+            c = i.get("candidatura") or {}
+            i["recusada_em"] = c.get("decidida_em") if i["status"] == Status.RECUSADA else i.get("processada_em")
+        itens.sort(key=lambda i: str(i.get("recusada_em") or ""), reverse=True)
+        c = ciclos.get(cid)
+        contagem = {st: sum(1 for i in itens if i["status"] == st) for st in RECUSADAS}
+        saida.append({
+            "ciclo": c.model_dump() if c else {"id": None, "origem": "anterior", "iniciado_em": None, "terminado_em": None},
+            "contagem": contagem,
+            "vagas": itens,
+        })
+    return saida

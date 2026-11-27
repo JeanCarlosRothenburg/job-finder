@@ -91,3 +91,38 @@ def test_mcp(cfg, monkeypatch):
     assert r["status"] == "descartada_filtro"
     nomes = [t.name for t in asyncio.run(mcp_server.mcp.list_tools())]
     assert "salvar_textos" in nomes
+
+
+def test_recusadas_por_ciclo(cfg):
+    _semear(cfg)  # ciclo 1: uma compatível e uma descartada (sênior)
+    cli = TestClient(criar_app(cfg, agendar=False))
+    cli.post("/api/vagas/1/decisao", json={"decisao": "recusar"})
+    grupos = cli.get("/api/recusadas").json()
+    assert len(grupos) == 1
+    g = grupos[0]
+    assert g["ciclo"]["id"] == 1 and g["ciclo"]["origem"] == "manual" and g["ciclo"]["terminado_em"]
+    assert g["contagem"] == {"recusada": 1, "abaixo_da_nota": 0, "descartada_filtro": 1}
+    assert all(v["recusada_em"] for v in g["vagas"])
+    recusada = next(v for v in g["vagas"] if v["status"] == "recusada")
+    assert recusada["processada_em"] and recusada["recusada_em"] == recusada["candidatura"]["decidida_em"]
+    # recalcular abre um ciclo novo para as decisões que ele refaz
+    from job_finder.pipeline import recalcular_notas
+
+    recalcular_notas(cfg)
+    grupos = cli.get("/api/recusadas").json()
+    assert [g["ciclo"]["origem"] for g in grupos] == ["recalculo", "manual"]
+
+
+def test_migra_banco_antigo(tmp_path):
+    import sqlite3
+
+    from job_finder.db import obter_engine
+
+    caminho = tmp_path / "antigo.db"
+    con = sqlite3.connect(caminho)
+    con.execute("CREATE TABLE vaga (id INTEGER PRIMARY KEY, fonte VARCHAR, id_externo VARCHAR, url VARCHAR, titulo VARCHAR)")
+    con.commit()
+    con.close()
+    obter_engine(str(caminho))
+    colunas = {r[1] for r in sqlite3.connect(caminho).execute("PRAGMA table_info(vaga)")}
+    assert {"processada_em", "ciclo_id", "nota"} <= colunas

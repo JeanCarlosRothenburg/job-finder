@@ -103,6 +103,11 @@ def criar_app(cfg: Config | None = None, agendar: bool = True) -> FastAPI:
         with sessao(cfg.db) as s:
             return servicos.listar(s, status.split(","), limite)
 
+    @app.get("/api/recusadas")
+    def recusadas(limite_ciclos: int = 30):
+        with sessao(cfg.db) as s:
+            return servicos.recusadas_por_ciclo(s, limite_ciclos)
+
     @app.get("/api/vagas/{vaga_id}")
     def vaga(vaga_id: int):
         with sessao(cfg.db) as s:
@@ -135,7 +140,7 @@ def criar_app(cfg: Config | None = None, agendar: bool = True) -> FastAPI:
     def descricao(vaga_id: int, corpo: Descricao):
         with sessao(cfg.db) as s:
             _erro(lambda: servicos.definir_descricao(s, vaga_id, corpo.descricao))
-        processar_pendentes(cfg, limite=5)
+        processar_pendentes(cfg, limite=5, origem="vaga_avulsa")
         with sessao(cfg.db) as s:
             return servicos.vaga_resumo(s, s.get(servicos.Vaga, vaga_id))
 
@@ -155,7 +160,7 @@ def criar_app(cfg: Config | None = None, agendar: bool = True) -> FastAPI:
             if not v:
                 raise HTTPException(409, "vaga já cadastrada")
             vid = v.id
-        processar_pendentes(cfg, limite=5)
+        processar_pendentes(cfg, limite=5, origem="vaga_avulsa")
         with sessao(cfg.db) as s:
             return servicos.vaga_resumo(s, s.get(servicos.Vaga, vid))
 
@@ -163,7 +168,7 @@ def criar_app(cfg: Config | None = None, agendar: bool = True) -> FastAPI:
     def disparar_ciclo():
         if processar_em_andamento():
             return {"iniciado": False, "mensagem": "já existe um ciclo em andamento"}
-        threading.Thread(target=ciclo, args=(cfg,), daemon=True).start()
+        threading.Thread(target=ciclo, args=(cfg, "manual"), daemon=True).start()
         return {"iniciado": True}
 
     @app.post("/api/recalcular")
